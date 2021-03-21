@@ -21,8 +21,6 @@ from collections import Counter
 from model.deeplab_multi import DeeplabMulti
 from model.discriminator import FCDiscriminator
 from utils.loss import CrossEntropy2d, DiceBCELoss
-from dataset.gta5_dataset import GTA5DataSet
-from dataset.cityscapes_dataset import cityscapesDataSet
 from my_dataset import SyntheticSmokeTrain, SimpleSmokeTrain, SimpleSmokeVal
 
 IMG_MEAN = np.array((104.00698793, 116.66876762, 122.67891434), dtype=np.float32)
@@ -255,11 +253,6 @@ def main():
                     image_shape=input_size, dataset_mean=IMG_MEAN),
         batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
 
-    # trainloader = data.DataLoader(
-    #     GTA5DataSet(args.data_dir, args.data_list, max_iters=args.num_steps * args.iter_size * args.batch_size,
-    #                 crop_size=input_size,
-    #                 scale=args.random_scale, mirror=args.random_mirror, mean=IMG_MEAN),
-    #     batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
 
     trainloader_iter = enumerate(trainloader)
     print("Length of train dataloader: ", len(trainloader))
@@ -267,14 +260,6 @@ def main():
         SimpleSmokeVal(args = {}, image_size=input_size_target, dataset_mean=IMG_MEAN),
                         batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, 
                         pin_memory=True)
-
-    # targetloader = data.DataLoader(cityscapesDataSet(args.data_dir_target, args.data_list_target,
-    #                                                  max_iters=args.num_steps * args.iter_size * args.batch_size,
-    #                                                  crop_size=input_size_target,
-    #                                                  scale=False, mirror=args.random_mirror, mean=IMG_MEAN,
-    #                                                  set=args.set),
-    #                                batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers,
-    #                                pin_memory=True)
 
 
     targetloader_iter = enumerate(targetloader)
@@ -293,14 +278,14 @@ def main():
 
     if args.gan == 'Vanilla':
         bce_loss = torch.nn.BCEWithLogitsLoss()
-        bce_loss_all = torch.nn.BCEWithLogitsLoss(reduction='none')
+        # bce_loss_all = torch.nn.BCEWithLogitsLoss(reduction='none')
     elif args.gan == 'LS':
         bce_loss = torch.nn.MSELoss()
-        bce_loss_all = torch.nn.MSELoss(reduction='none')
+        # bce_loss_all = torch.nn.MSELoss(reduction='none')
 
     interp = nn.Upsample(size=(input_size[1], input_size[0]), mode='bilinear', align_corners=True)
     interp_target = nn.Upsample(size=(input_size_target[1], input_size_target[0]), mode='bilinear', align_corners=True)
-    interp_domain = nn.Upsample(size=(input_size_target[1], input_size_target[0]), mode='bilinear', align_corners=True)
+    # interp_domain = nn.Upsample(size=(input_size_target[1], input_size_target[0]), mode='bilinear', align_corners=True)
 
     # labels for adversarial training
     source_label = 0
@@ -406,34 +391,34 @@ def main():
             D_out1 = model_D1(F.softmax(pred_target1, dim=1))
             D_out2 = model_D2(F.softmax(pred_target2, dim=1))
 
-            w1 = torch.argmax(pred_target1.detach(), dim=1)
-            w2 = torch.argmax(pred_target2.detach(), dim=1)
+            # w1 = torch.argmax(pred_target1.detach(), dim=1)
+            # w2 = torch.argmax(pred_target2.detach(), dim=1)
             
             min_class1 = sorted([(k,v) for k,v in Counter(w1.ravel()).items()], key= lambda x:x[1])[0][0]
             min_class2 = sorted([(k,v) for k,v in Counter(w2.ravel()).items()], key= lambda x:x[1])[0][0]
 
-            m1 = torch.where(w1==min_class1)
-            m1c = torch.where(w1!=min_class1)
-            w1[m1] = 11
-            w1[m1c] = 1
+            # m1 = torch.where(w1==min_class1)
+            # m1c = torch.where(w1!=min_class1)
+            # w1[m1] = 11
+            # w1[m1c] = 1
 
-            m2 = torch.where(w2==min_class2)
-            m2c = torch.where(w2!=min_class2)
-            w2[m2] = 11
-            w2[m2c] = 1
+            # m2 = torch.where(w2==min_class2)
+            # m2c = torch.where(w2!=min_class2)
+            # w2[m2] = 11
+            # w2[m2c] = 1
 
 
-            D_out1 = interp_domain(D_out1)
-            D_out2 = interp_domain(D_out2)
+            # D_out1 = interp_domain(D_out1)
+            # D_out2 = interp_domain(D_out2)
 
             
-            loss_adv_target1 = torch.mean(torch.multiply(bce_loss_all(D_out1,
+            loss_adv_target1 = bce_loss(D_out1,
                                        Variable(torch.FloatTensor(D_out1.data.size()).fill_(source_label)).cuda(
-                                           args.gpu)), w1))
+                                           args.gpu))
 
-            loss_adv_target2 = torch.mean(torch.multiply(bce_loss_all(D_out2,
+            loss_adv_target2 = bce_loss(D_out2,
                                         Variable(torch.FloatTensor(D_out2.data.size()).fill_(source_label)).cuda(
-                                            args.gpu)), w2))
+                                            args.gpu))
 
             loss = args.lambda_adv_target1 * loss_adv_target1 + args.lambda_adv_target2 * loss_adv_target2
             loss = loss / args.iter_size
@@ -456,19 +441,13 @@ def main():
 
             D_out1 = model_D1(F.softmax(pred1, dim=1))
             D_out2 = model_D2(F.softmax(pred2, dim=1))
-            D_out1 = interp_domain(D_out1)
-            D_out2 = interp_domain(D_out2)
 
-            loss_D1 = torch.mean(torch.multiply(
-                bce_loss_all(D_out1,
-                        Variable(torch.FloatTensor(D_out1.data.size()).fill_(source_label)).cuda(args.gpu)),
-                        w1))
+            loss_D1 = bce_loss(D_out1,
+                        Variable(torch.FloatTensor(D_out1.data.size()).fill_(source_label)).cuda(args.gpu))
 
-            loss_D2 = torch.mean(torch.multiply(
-                        bce_loss_all(D_out2,
+            loss_D2 = bce_loss(D_out2,
                         Variable(torch.FloatTensor(
-                        D_out2.data.size()).fill_(source_label)).cuda(args.gpu)),
-                        w2))
+                        D_out2.data.size()).fill_(source_label)).cuda(args.gpu))
 
             loss_D1 = loss_D1 / args.iter_size / 2
             loss_D2 = loss_D2 / args.iter_size / 2
@@ -485,14 +464,12 @@ def main():
 
             D_out1 = model_D1(F.softmax(pred_target1, dim=1))
             D_out2 = model_D2(F.softmax(pred_target2, dim=1))
-            D_out1 = interp_domain(D_out1)
-            D_out2 = interp_domain(D_out2)
 
-            loss_D1 = torch.mean(torch.multiply(bce_loss_all(D_out1,
-                              Variable(torch.FloatTensor(D_out1.data.size()).fill_(target_label)).cuda(args.gpu)), w1))
+            loss_D1 = bce_loss(D_out1,
+                              Variable(torch.FloatTensor(D_out1.data.size()).fill_(target_label)).cuda(args.gpu))
 
-            loss_D2 = torch.mean(torch.multiply(bce_loss_all(D_out2,
-                               Variable(torch.FloatTensor(D_out2.data.size()).fill_(target_label)).cuda(args.gpu)), w2))
+            loss_D2 = bce_loss(D_out2,
+                               Variable(torch.FloatTensor(D_out2.data.size()).fill_(target_label)).cuda(args.gpu))
 
             loss_D1 = loss_D1 / args.iter_size / 2
             loss_D2 = loss_D2 / args.iter_size / 2
@@ -520,16 +497,16 @@ def main():
 
         if i_iter >= args.num_steps_stop - 1:
             print('save model ...')
-            torch.save(model.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(args.num_steps_stop) + '.pth'))
-            torch.save(model_D1.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(args.num_steps_stop) + '_D1.pth'))
-            torch.save(model_D2.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(args.num_steps_stop) + '_D2.pth'))
+            torch.save(model.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(args.num_steps_stop) + '.pth'))
+            torch.save(model_D1.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(args.num_steps_stop) + '_D1.pth'))
+            torch.save(model_D2.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(args.num_steps_stop) + '_D2.pth'))
             break
 
         if i_iter % args.save_pred_every == 0 and i_iter != 0:
             print('taking snapshot ...')
-            torch.save(model.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(i_iter) + '.pth'))
-            torch.save(model_D1.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(i_iter) + '_D1.pth'))
-            torch.save(model_D2.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_weighted_loss_' + str(i_iter) + '_D2.pth'))
+            torch.save(model.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(i_iter) + '.pth'))
+            torch.save(model_D1.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(i_iter) + '_D1.pth'))
+            torch.save(model_D2.state_dict(), osp.join(args.snapshot_dir, 'lmda_adv_0.1_' + str(i_iter) + '_D2.pth'))
         writer.flush()
 
 if __name__ == '__main__':

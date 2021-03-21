@@ -122,8 +122,10 @@ class SimpleSmokeVal(Dataset):
 class SyntheticSmokeTrain(Dataset):
     def __init__(self, 
                  args,
-                 data_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/non-smoke/", 
-                 overlays_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/synth_smoke/masks/",
+                #  data_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/non-smoke/", 
+                #  overlays_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/synth_smoke/masks/",
+                 data_root="../dataset/non-smoke/",
+                 overlays_root="../dataset/masks/",
                  mask_thresh= 0.3,
                  dataset_limit = -1,
                  debug_train = False,
@@ -298,9 +300,11 @@ class SyntheticSmokeTrain(Dataset):
 
 
 class SmokeDataset(Dataset):
-    def __init__(self, 
-                 data_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New dataset/", 
-                 anns_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New Dataset Annotations/",
+    def __init__(self,
+                data_root="../smoke-advent/data/real_smoke/images/",
+                anns_root="../smoke-advent/data/real_smoke/masks/", 
+                #  data_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New dataset/", 
+                #  anns_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New Dataset Annotations/",
                  dataset_limit=-1,
                  image_size = (512,1024),
                  dataset_mean = (112,112,112)):

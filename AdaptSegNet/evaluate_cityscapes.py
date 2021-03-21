@@ -15,7 +15,6 @@ from torch.utils import data, model_zoo
 from model.deeplab import Res_Deeplab
 from model.deeplab_multi import DeeplabMulti
 from model.deeplab_vgg import DeeplabVGG
-from dataset.cityscapes_dataset import cityscapesDataSet
 from my_dataset import SyntheticSmokeTrain, SimpleSmokeTrain, SimpleSmokeVal, SmokeDataset
 
 from compute_iou import iou_pytorch
@@ -30,7 +29,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 IMG_MEAN = np.array((104.00698793,116.66876762,122.67891434), dtype=np.float32)
 
-DATA_DIRECTORY = './data/Cityscapes/data'
+DATA_DIRECTORY = '../smoke-advent/data/real_smoke/'
 DATA_LIST_PATH = './dataset/cityscapes_list/val.txt'
 SAVE_PATH = './result/cityscapes'
 
@@ -69,7 +68,7 @@ def get_arguments():
     parser.add_argument("--model", type=str, default=MODEL,
                         help="Model Choice (DeeplabMulti/DeeplabVGG/Oracle).")
     parser.add_argument("--data-dir", type=str, default=DATA_DIRECTORY,
-                        help="Path to the directory containing the Cityscapes dataset.")
+                        help="Path to the directory containing the target dataset.")
     parser.add_argument("--data-list", type=str, default=DATA_LIST_PATH,
                         help="Path to the file listing the images in the dataset.")
     parser.add_argument("--ignore-label", type=int, default=IGNORE_LABEL,
