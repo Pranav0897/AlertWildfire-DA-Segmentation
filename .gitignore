@@ -1,3 +1,16 @@
+# Images
+.png
+.jpeg
+.jpg
+
+# model checkpoints
+.ckpt
+.pth
+
+# tensorboard checkpoints
+*.tfevenets.*
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
