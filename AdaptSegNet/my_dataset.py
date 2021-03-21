@@ -302,7 +302,7 @@ class SyntheticSmokeTrain(Dataset):
 class SmokeDataset(Dataset):
     def __init__(self,
                 data_root="../smoke-advent/data/real_smoke/images/",
-                anns_root="../smoke-advent/data/real_smoke/masks/", 
+                anns_root="../dataset/real_smoke_annotations/", 
                 #  data_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New dataset/", 
                 #  anns_root="/data/field/nextcloud_nautilus_sync/AlertWildfire/Labelled Frames/New Dataset Annotations/",
                  dataset_limit=-1,
