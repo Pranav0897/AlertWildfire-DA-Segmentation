@@ -1,11 +1,11 @@
 # Images
-.png
-.jpeg
-.jpg
+*.png
+*.jpeg
+*.jpg
 
 # model checkpoints
-.ckpt
-.pth
+*.ckpt
+*.pth
 
 # tensorboard checkpoints
 *.tfevenets.*
